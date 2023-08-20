@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+    //   "module": "commonjs",
+      "strict": true,
+    //   "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "resolveJsonModule": true,
+      "jsx": "react", // Use "preserve" if you are not using React
+      "moduleResolution": "bundler",
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "allowSyntheticDefaultImports": true,
+      "baseUrl": "./src", // Set the base URL for module resolution (if applicable)
+      "paths": {
+        // Add your custom module paths here (if applicable)
+      }
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", "dist", "build"]
+  }
+  

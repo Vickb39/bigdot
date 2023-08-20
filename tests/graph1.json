@@ -1,0 +1,53 @@
+{
+  "name": "G",
+  "directed": true,
+  "strict": false,
+  "_subgraph_cnt": 0,
+  "objects": [
+    {
+      "_gvid": 0,
+      "name": "A",
+      "color": "red",
+      "label": "\\N"
+    },
+    {
+      "_gvid": 1,
+      "name": "B",
+      "color": "green",
+      "label": "\\N"
+    },
+    {
+      "_gvid": 2,
+      "name": "C",
+      "color": "blue",
+      "label": "\\N"
+    },
+    {
+      "_gvid": 3,
+      "name": "D",
+      "label": "\\N"
+    }
+  ],
+  "edges": [
+    {
+      "_gvid": 0,
+      "tail": 0,
+      "head": 1
+    },
+    {
+      "_gvid": 1,
+      "tail": 0,
+      "head": 2
+    },
+    {
+      "_gvid": 2,
+      "tail": 1,
+      "head": 3
+    },
+    {
+      "_gvid": 3,
+      "tail": 2,
+      "head": 3
+    }
+  ]
+}
