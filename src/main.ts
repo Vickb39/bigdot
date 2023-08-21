@@ -6,6 +6,10 @@ import app from 'app'
 import enableDragOnApp from 'traits/drag';
 import enableZoomAndPan from 'traits/zoomAndPan';
 
+enableDragOnApp(app)
+enableZoomAndPan(app)
+
+
 // @ts-expect-error
 document.body.appendChild(app.view);
 
@@ -16,37 +20,43 @@ document.body.appendChild(app.view);
 app.stage.scale.set(0.5);
 
 
-const bunnies = [
-    createBunny(0, 500),
-    createRect(400, 400),
-    createRect(400, 600),
-    createRect(800, 300),
-    createRect(800, 500),
-    createRect(800, 500),
-    createRect(800, 700),
+const rects = [
+    createRect(600, 600),
+
+    createRect(600, 800),
+    createRect(900, 600),
+    createRect(300, 600),
+    createRect(600, 400),
+
+    createRect(900, 800),
+    createRect(900, 400),
+    createRect(300, 800),
+    createRect(300, 400),
+
 ]
 
-// for loop over bunnies and add them to the stage
-for (let i = 0; i < bunnies.length; i++) {
-    app.stage.addChild(bunnies[i]);
+const arrows = [
+    createArrow(rects[0], rects[1]),
+    createArrow(rects[0], rects[2]),
+    createArrow(rects[0], rects[3]),
+    createArrow(rects[0], rects[4]),
+
+    createArrow(rects[0], rects[5]),
+    createArrow(rects[0], rects[6]),
+    createArrow(rects[0], rects[7]),
+    createArrow(rects[0], rects[8]),
+
+]
+
+// for loop over rects and add them to the stage
+for (let i = 0; i < rects.length; i++) {
+    app.stage.addChild(rects[i]);
+}
+for (let i = 0; i < arrows.length; i++) {
+    app.stage.addChild(arrows[i]);
 }
 
 
-// Call the function to draw an arrow between the objects
-app.stage.addChild(createArrow(bunnies[0], bunnies[1]));
-app.stage.addChild(createArrow(bunnies[0], bunnies[2]));
-
-app.stage.addChild(createArrow(bunnies[1], bunnies[3]));
-app.stage.addChild(createArrow(bunnies[1], bunnies[4]));
-
-app.stage.addChild(createArrow(bunnies[2], bunnies[5]));
-app.stage.addChild(createArrow(bunnies[2], bunnies[6]));
-
-
-
-
-enableDragOnApp(app)
-enableZoomAndPan(app)
 
 
 

@@ -18,14 +18,52 @@ export default function createArrow(obj1: Arrowable, obj2: Arrowable) {
     const obj2CenterY = obj2.y + obj2.height / 2;
 
     const angle = Math.atan2(obj2CenterY - obj1CenterY, obj2CenterX - obj1CenterX);
+
+    let fromX: number
+    let fromY: number
+    let toX: number
+    let toY: number
+
+    const buffer = 15;
     const slope = (obj2CenterY - obj1CenterY) / (obj2CenterX - obj1CenterX);
     const yintercept = obj1CenterY - slope * obj1CenterX;
 
-    const buffer = 15;
-    const fromX = obj1.x + obj1.width + buffer;
-    const fromY = slope * fromX + yintercept;
-    const toX = obj2.x - buffer;
-    const toY = slope * toX + yintercept;
+    if (angle === Math.PI / 2) {
+        fromX = obj1CenterX;
+        toX = obj2CenterX
+        fromY = obj1.y + obj1.height + buffer;
+        toY = obj2.y - buffer;
+    } else if (angle === -Math.PI / 2) {
+        fromX = obj1CenterX;
+        toX = obj2CenterX
+        fromY = obj1.y - buffer;
+        toY = obj2.y + obj2.height + buffer;
+    } else if (angle >= 0 && angle < Math.PI / 2) {
+        fromX = obj1.x + obj1.width + buffer;
+        fromY = slope * fromX + yintercept;
+        toX = obj2.x - buffer;
+        toY = slope * toX + yintercept;
+    } else if (angle > Math.PI / 2 && angle <= Math.PI) {
+        fromX = obj1.x - buffer;
+        fromY = slope * fromX + yintercept;
+        toX = obj2.x + obj2.width + buffer;
+        toY = slope * toX + yintercept;
+    } else if (angle < -Math.PI / 2 && angle >= -Math.PI) {
+        fromX = obj1.x - buffer;
+        fromY = slope * fromX + yintercept;
+        toX = obj2.x + obj2.width + buffer;
+        toY = slope * toX + yintercept;
+    } else if (angle < 0 && angle > -Math.PI / 2) {
+        fromX = obj1.x + obj1.width + buffer;
+        fromY = slope * fromX + yintercept;
+        toX = obj2.x - buffer;
+        toY = slope * toX + yintercept;
+    } else {
+        throw new Error('Angle not accounted for');
+    }
+
+
+
 
     const arrowHeadSize = 20;
 
