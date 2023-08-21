@@ -2,9 +2,9 @@
   "name": "bigdot",
   "version": "0.0.1",
   "description": "Interactive, large graph viewer",
-  "main": "src/app.js",
+  "main": "src/main.js",
   "scripts": {
-    "serve": "./node_modules/.bin/esbuild src/app.ts --format=esm --outdir=www/js --bundle --servedir=www --sourcemap",
+    "serve": "./node_modules/.bin/esbuild src/main.ts --format=esm --outdir=www/js --bundle --servedir=www --sourcemap",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
