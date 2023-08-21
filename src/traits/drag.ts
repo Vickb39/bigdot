@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import app from 'app'
 
-let dragTarget: PIXI.Sprite | null = null;
+let dragTarget: PIXI.DisplayObject | null = null;
 let hasUpdatedPivot = false;
 
 export default function enableDragOnApp(app: PIXI.Application): void {
@@ -11,7 +11,7 @@ export default function enableDragOnApp(app: PIXI.Application): void {
     app.stage.on('pointerupoutside', onDragEnd);
 }
 
-export function enableDragOnObject(object: PIXI.Sprite | PIXI.Graphics): void {
+export function enableDragOnObject(object: PIXI.DisplayObject): void {
     object.on('pointerdown', onDragStart, object);
 }
 
@@ -32,7 +32,7 @@ function onDragStart(event: PIXI.FederatedPointerEvent): void {
     // we want to track the movement of this particular touch
     // this.data = event.data;
     dragTarget = null;
-    const bunny = this as PIXI.Sprite;
+    const bunny = this as PIXI.DisplayObject;
 
     bunny.alpha = 0.5;
     dragTarget = bunny;

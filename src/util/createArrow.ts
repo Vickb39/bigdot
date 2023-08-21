@@ -1,4 +1,6 @@
 import * as PIXI from 'pixi.js';
+import app from 'app';
+
 
 interface Arrowable {
     x: number;
@@ -80,6 +82,8 @@ export default function createArrow(obj1: Arrowable, obj2: Arrowable) {
         toX - arrowHeadSize * Math.cos(angle + Math.PI / 6),
         toY - arrowHeadSize * Math.sin(angle + Math.PI / 6)
     );
+
+    app.stage.addChild(arrow);
 
     return arrow;
 }

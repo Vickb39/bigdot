@@ -21,17 +21,17 @@ app.stage.scale.set(0.5);
 
 
 const rects = [
-    createRect(600, 600),
+    createRect(600, 600, 'ABCD'),
 
-    createRect(600, 800),
-    createRect(900, 600),
-    createRect(300, 600),
-    createRect(600, 400),
+    createRect(600, 800, 'B'),
+    createRect(900, 600, 'C'),
+    createRect(300, 600, 'D'),
+    createRect(600, 400, 'E'),
 
-    createRect(900, 800),
-    createRect(900, 400),
-    createRect(300, 800),
-    createRect(300, 400),
+    createRect(900, 800, 'F'),
+    createRect(900, 400, 'G'),
+    createRect(300, 800, 'H'),
+    createRect(300, 400, 'I'),
 
 ]
 
@@ -47,20 +47,6 @@ const arrows = [
     createArrow(rects[0], rects[8]),
 
 ]
-
-// for loop over rects and add them to the stage
-for (let i = 0; i < rects.length; i++) {
-    app.stage.addChild(rects[i]);
-}
-for (let i = 0; i < arrows.length; i++) {
-    app.stage.addChild(arrows[i]);
-}
-
-
-
-
-
-
 
 
 
