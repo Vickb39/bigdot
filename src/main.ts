@@ -1,10 +1,11 @@
 import * as PIXI from 'pixi.js';
 import createArrow from 'util/createArrow';
-import createBunny from 'util/createBunny';
+import drawEllipse from 'util/drawEllipse';
 import createRect from 'util/createRect';
 import app from 'app'
 import enableDragOnApp from 'traits/drag';
 import enableZoomAndPan from 'traits/zoomAndPan';
+import loadDotFile from 'util/loadDotFile2';
 
 enableDragOnApp(app)
 enableZoomAndPan(app)
@@ -20,6 +21,8 @@ document.body.appendChild(app.view);
 app.stage.scale.set(0.5);
 
 
+loadDotFile()
+
 const rects = [
     createRect(600, 600, 'ABCD'),
 
@@ -32,6 +35,7 @@ const rects = [
     createRect(900, 400, 'G'),
     createRect(300, 800, 'H'),
     createRect(300, 400, 'I'),
+    drawEllipse(600, 600, 200, 200)
 
 ]
 
