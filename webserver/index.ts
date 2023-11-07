@@ -1,5 +1,7 @@
-// Import the necessary libraries from Bun
-import Bun from "bun";
+const http = require('http');
+const url = require('url');
+const fs = require('fs');
+
 
 function parseRepoIdentifier(url: string) {
     // Use a regular expression to match the repository identifier
@@ -19,33 +21,44 @@ function depgraph(repo_url: string): Response {
     const repoIdentifier = 'https://github.com/python-attrs/attrs.git'
     const repoDest = '/tmp/attrs';
 
-    const rmProc = Bun.spawnSync(['rm', '-rf', repoDest]);
+    const rmProc = fs.spawnSync(['rm', '-rf', repoDest]);
 
-    const cloneProc = Bun.spawnSync(['git', 'clone', repoIdentifier, repoDest, '--depth=1']);
+    const cloneProc = fs.spawnSync(['git', 'clone', repoIdentifier, repoDest, '--depth=1']);
     if (!cloneProc.success) {
         throw new Error('Failed to clone repository\n' + cloneProc.stderr);
     }
 
     const depgraphDest = '/tmp/attrs-depgraph.png'
-    const depgraphProc = Bun.spawnSync(['pydeps', '--no-show', '-Tpng', `-o=${depgraphDest}`, `${repoDest}/src/attrs`]);
+
+    const depgraphProc = fs.spawnSync(['pydeps', '--no-show', '-Tpng', `-o=${depgraphDest}`, `${repoDest}/src/attrs`]);
     if (!depgraphProc.success) {
         throw new Error('Failed to generate dependency graph\n' + depgraphProc.stderr);
     }
 
-
     return new Response(Bun.file(depgraphDest))
-
 }
 
-// Define the server
-const server = Bun.serve({
-    port: 3000,  // Specify the port number
-    fetch(req: Request) {
-        const url = new URL(req.url);
-        if (url.pathname === "/") return new Response("Home page!");
-        if (url.pathname.startsWith("/") && req.method === 'GET') return depgraph('');
-        return new Response("404!");
-    },
+
+// Create an HTTP server
+const server = http.createServer((req: Request, res: Response) => {
+    const parsedUrl = url.parse(req.url, true);
+    if (parsedUrl.pathname === "/") {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Home page!');
+    } else if (parsedUrl.pathname.startsWith("/") && req.method === 'GET') {
+        const response = depgraph('');  // Assuming depgraph returns a string or Buffer
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end(response);
+    } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('404!');
+    }
+});
+
+// Specify the port number and start the server
+const PORT = 3000;
+server.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
 });
 
 // Log the port number to the console

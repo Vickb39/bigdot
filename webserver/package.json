@@ -2,10 +2,18 @@
   "name": "bigdot-webserver",
   "module": "index.ts",
   "type": "module",
-  "devDependencies": {
-    "bun-types": "latest"
-  },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "dependencies": {
+    "@types/graphviz": "^0.0.37",
+    "graphviz": "^0.0.9",
+    "tree-sitter": "^0.20.6",
+    "tree-sitter-python": "^0.20.4",
+    "ts-node": "^10.9.1"
+  },
+  "trustedDependencies": [
+    "tree-sitter",
+    "tree-sitter-python"
+  ]
 }
