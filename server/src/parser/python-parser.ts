@@ -4,22 +4,88 @@ import ts, { Query } from 'tree-sitter';
 // @ts-expect-error
 import TreeSitterPython from 'tree-sitter-python';
 
-
-// Function to check if a module corresponds to a local file
-function isLocalModule(moduleName: string): boolean {
-  if (moduleName.includes('e')) {
-    return true;
-  }
-  return false;
+function isFirstParty(dottedImport: string, packageRoot: string): boolean {
+  const packageName = packageRoot.slice(packageRoot.lastIndexOf(path.sep) + 1);
+  return dottedImport.startsWith(packageName);
 }
 
+
 function pyModuleToFilepath(moduleName: string): string {
-  // todo: handle __init__.py
-  return moduleName.replace(/\./g, '/') + '.py';
+  let parts = moduleName.split('.');
+  const n = parts.length;
+  if (parts[n - 1] === '__init__') {
+    parts.pop(); // remove '__init__'
+  }
+  return path.join(...parts) + '.py';
+}
+
+function pyFilepathToModule(filepath: string): string {
+  if (filepath.startsWith(path.sep)) {
+    filepath = filepath.slice(1);
+  }
+
+  let parts = filepath.split(path.sep);
+  const n = parts.length;
+  if (parts[n - 1] === '__init__.py') {
+    parts.pop(); // remove '__init__.py'
+  } else if (parts[n - 1].endsWith('.py')) {
+    parts[n - 1] = parts[n - 1].slice(0, -3); // remove '.py'
+  }
+  return parts.join('.');
+}
+
+
+// Returns absolute import path
+function absolute(dottedImport: string, filepath: string): string {
+  // already absolute
+  if (!dottedImport.startsWith('.')) {
+    return dottedImport;
+  }
+  if (filepath.startsWith(path.sep)) {
+    filepath = filepath.slice(1);
+  }
+  const parts = filepath.split(path.sep);
+  const numDots = dottedImport.match(/^\.+/)?.[0].length || 0;
+  parts.splice(parts.length - numDots, numDots);
+  return parts.join('.') + '.' + dottedImport.slice(numDots);
+}
+
+// Returns Python module
+//   Given an absolute filename, it returns the Pythonn (e.g. /tmp/attrs/src/attr/_make -> 'attr._make')
+//   Given an import statement (non-relative), its returns the Python module (e.g. 'attr._make.ABC' -> 'attr._make')
+//   Other imports get trimmed to their root name (e.g. 'typing.ABC' -> 'typing')
+function findModule(filenameOrImport: string, packageRoot: string): string {
+  const packageName = packageRoot.slice(packageRoot.lastIndexOf(path.sep) + 1);
+
+  if (filenameOrImport.endsWith('.py')) {
+    const filename = filenameOrImport;
+    if (filename.startsWith(packageRoot)) {
+      const trim = packageRoot.slice(0, packageRoot.lastIndexOf(path.sep)); // tmp/attrs/src
+      const relative = path.relative(trim, filename); // attr/__init__.py
+      return pyFilepathToModule(relative);
+    } else {
+      return pyFilepathToModule(filename);
+    }
+  } else {
+    const importt = filenameOrImport;
+    if (!importt.startsWith(packageName)) {
+      if (importt.includes('.')) {
+        return importt.slice(0, importt.indexOf('.')); // e.g. 'attr'
+      } else {
+        return importt;
+      }
+    } else {
+      const fullname = path.resolve(packageName, pyModuleToFilepath(importt));
+      if (fs.existsSync(fullname)) {
+        return importt;
+      }
+      return importt.slice(0, importt.lastIndexOf('.')); // lop off the symbol e.g. 'attr._make.ABC' -> 'attr._make'
+    }
+  }
 }
 
 // Function to traverse the syntax tree
-function findDottedImports(root: ts.SyntaxNode): string[] {
+function findDottedImports(root: ts.SyntaxNode, filepath: string, packageRoot: string): string[] {
   const deps: string[] = [];
 
   // https://tree-sitter.github.io/tree-sitter/playground
@@ -46,54 +112,20 @@ function findDottedImports(root: ts.SyntaxNode): string[] {
       deps.push(...rest.map(c => `${base.node.text}.${c.node.text}`));
     } else if (match.pattern === 4) {
       deps.push(match.captures[0].node.text);
+    } else if (match.pattern === 5) {
+      const [depth, base, ...rest] = match.captures;
+      const trim = packageRoot.slice(0, packageRoot.lastIndexOf(path.sep)); // tmp/attrs/src
+      const relative = path.relative(trim, filepath); // attr/__init__.py
+      deps.push(...rest.map(c => absolute(`${depth.node.text}${base.node.text}.${c.node.text}`, relative)));
+    } else if (match.pattern === 6) {
+      const [depth, base, ...rest] = match.captures;
+      const trim = packageRoot.slice(0, packageRoot.lastIndexOf(path.sep)); // tmp/attrs/src
+      const relative = path.relative(trim, filepath); // attr/__init__.py      
+      deps.push(...rest.map(c => absolute(`${depth.node.text}${base.node.text}.${c.node.text}`, relative)));
     }
-    // } else if (match.pattern === 5) {
-
-    // }
-    // if (capture.name === 'import_modules') {
-    //   deps.push(capture.node.text);
-    // } else if (capture.name === 'import_from_base') {
-    //   deps.push(capture.node.text);
-    // } else if (capture.name === 'import_from_names') {
-    //   deps.push(capture.node.text);
-    // } else if (capture.name === 'relative_import_from_base') {
-    //   deps.push(capture.node.text);
-    // }
   });
 
-
-  const visit = (node: ts.SyntaxNode): void => {
-    if (node.type === 'import_statement') {
-
-      const text = node.text;
-      const dottedModules = text       // import a, b.c 
-        .slice('import'.length).trim() // a, b.c 
-        .split(',')                    // ['a', 'b.c ']
-        .map(m => m.trim());           // ['a', 'b.c']
-
-      deps.push(...dottedModules);
-    } else if (node.type === 'import_from_statement') {
-      const text = node.text;
-      const [base, ...rest] = text        // from a import b, c.d 
-        .slice('from'.length).trim()      // a import b, c.d 
-        .split(' ');                      // ['a', 'import', 'b,', 'c.d ']
-
-      const names = rest.join(' ').trim() // import b, c.d 
-        .slice('import'.length).trim()    // b, c.d 
-        .split(',').map(n => n.trim());   // ['b', 'c.d']
-
-      deps.push(...names.map(n => `${base}.${n}`));
-    }
-
-
-    // Recursively visit the children of the current node
-    for (const child of node.children) {
-      visit(child);
-    }
-  };
-
-  visit(root);
-  return deps;
+  return deps.map(d => findModule(d, packageRoot)).filter(d => isFirstParty(d, packageRoot));
 }
 
 
@@ -131,20 +163,18 @@ function walkDirectory(dir: string, fn: (filepath: string) => void) {
   }
 }
 
-function parsePythonPackage(pyPackage: string): Map<string, string[]> {
+function parsePythonPackage(packageRoot: string): Map<string, string[]> {
   // Map from filepath to set of local modules
   const fileMap = new Map<string, string[]>();
 
-  walkDirectory(pyPackage, (filepath: string) => {
+  walkDirectory(packageRoot, (filepath: string) => {
     if (!filepath.endsWith('.py')) {
       return;
     }
     const code = fs.readFileSync(filepath, 'utf8');
 
-    const dottedImports = findDottedImports(parsePythonCode(code));
-    const localModules = dottedImports.filter(isLocalModule);
-    const localFilepaths = localModules.map(pyModuleToFilepath);
-    fileMap.set(filepath, localFilepaths);
+    const dottedImports = findDottedImports(parsePythonCode(code), filepath, packageRoot);
+    fileMap.set(findModule(filepath, packageRoot), dottedImports);
   });
 
   return fileMap;
@@ -165,12 +195,12 @@ function generateDotGraph(fileMap: Map<string, string[]>): string {
   return graph;
 }
 
-function main(pyPackage: string): void {
-  const fileMap = parsePythonPackage(pyPackage);
+function main(packageRoot: string): void {
+  const fileMap = parsePythonPackage(packageRoot);
   console.log('fileMap: ' + fileMap.entries());
   const graph = generateDotGraph(fileMap);
   fs.writeFileSync('graph.dot', graph);
 }
 
 
-main('/tmp/attrs/src/attr');
+main('/tmp/requests/src/requests');
